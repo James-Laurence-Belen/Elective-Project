@@ -11,6 +11,7 @@ type AuthContextType = {
 	login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
 	register: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>
 	logout: () => Promise<void>
+	updateProfile: (data: { name?: string; email?: string; password?: string }) => Promise<{ ok: boolean; error?: string }>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -19,6 +20,7 @@ export const AuthContext = createContext<AuthContextType>({
 	login: async () => ({ ok: false }),
 	register: async () => ({ ok: false }),
 	logout: async () => {},
+	updateProfile: async () => ({ ok: false }),
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -85,8 +87,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		router.push('/')
 	}
 
+	const updateProfile = async (data: { name?: string; email?: string; password?: string }) => {
+		try {
+			const res = await fetch('/api/auth/me', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+				credentials: 'include',
+			})
+			const body = await res.json()
+			if (!res.ok) return { ok: false, error: body?.error || 'Update failed' }
+			setUser(body.user)
+			return { ok: true }
+		} catch (err) {
+			return { ok: false, error: 'Network error' }
+		}
+	}
+
 	return (
-		<AuthContext.Provider value={{ user, loading, login, register, logout }}>
+		<AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
 			{children}
 		</AuthContext.Provider>
 	)

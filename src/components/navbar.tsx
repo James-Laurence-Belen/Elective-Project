@@ -1,10 +1,11 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Search, Menu, X, User, Heart } from 'lucide-react'
 import { useBookmarks } from '@/context/bookmarkcontext'
+import { AuthContext } from '@/context/authcontext'
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -17,6 +18,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { bookmarkedIds } = useBookmarks()
+  const { user } = useContext(AuthContext)
 
   const isActive = (path: string) => pathname === path
     return (
@@ -67,13 +69,23 @@ export default function Navbar() {
               )}
             </Link>
 
-            <Link
-              href="/login"
-              className="flex items-center gap-2 bg-brown hover:bg-light-brown text-cream px-3 py-1.5 pixel-border-sm transition-colors"
-            >
-              <User size={16} />
-              <span className="font-pixel text-[10px]">Login</span>
-            </Link>
+            {user ? (
+              <Link
+                href="/profile"
+                className="flex items-center justify-center w-9 h-9 bg-brown hover:bg-light-brown text-cream px-3 py-1.5 pixel-border-sm transition-colors"
+                aria-label="Profile"
+              >
+                <User size={16} />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-2 bg-brown hover:bg-light-brown text-cream px-3 py-1.5 pixel-border-sm transition-colors"
+              >
+                <User size={16} />
+                <span className="font-pixel text-[10px]">Login</span>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -103,13 +115,23 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="border-t border-dark-green my-2 pt-2">
-               <Link
-                href="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block px-3 py-2 font-pixel text-[10px] uppercase text-cream hover:bg-dark-green"
-              >
-                Login / Register
-              </Link>
+               {user ? (
+                 <Link
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 font-pixel text-[10px] uppercase text-cream hover:bg-dark-green"
+                >
+                  Profile
+                </Link>
+               ) : (
+                 <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 font-pixel text-[10px] uppercase text-cream hover:bg-dark-green"
+                >
+                  Login / Register
+                </Link>
+               )}
             </div>
           </div>
         </div>
