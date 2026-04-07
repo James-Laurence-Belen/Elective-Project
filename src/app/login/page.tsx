@@ -1,8 +1,10 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { PixelBorder } from '@/components/pixelborder'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { AuthContext } from '@/context/authcontext'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -12,7 +14,23 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Authentication disabled - form is for display only
+    // Will be handled by AuthContext
+  }
+
+  const { login, register } = useContext(AuthContext)
+  const router = useRouter()
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isLogin) {
+      const res = await login(email, password)
+      if (res.ok) router.push('/')
+      else alert(res.error)
+    } else {
+      const res = await register(name, email, password)
+      if (res.ok) router.push('/')
+      else alert(res.error)
+    }
   }
 
   return (
@@ -62,7 +80,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-4">
             {!isLogin && (
               <div>
                 <label className="block text-sm font-bold text-dark-brown mb-1">
