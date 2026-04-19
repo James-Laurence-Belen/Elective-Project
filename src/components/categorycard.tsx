@@ -2,7 +2,6 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { PixelBorder } from './pixelborder'
 import { Category } from '@/lib/categories'
 
 interface CategoryCardProps {
@@ -13,10 +12,7 @@ interface CategoryCardProps {
 export function CategoryCard({ category, eventCount }: CategoryCardProps) {
   return (
     <Link href={`/events?category=${category.id}`} className="block h-full">
-      <PixelBorder
-        interactive
-        className="h-full p-4 flex flex-col items-center text-center hover:bg-cream transition-colors"
-      >
+      <div className="h-full p-6 flex flex-col items-center text-center bg-white shadow-md rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div
           className={`w-16 h-16 ${category.color} rounded-none pixel-border-sm flex items-center justify-center text-3xl mb-3`}
         >
@@ -33,7 +29,7 @@ export function CategoryCard({ category, eventCount }: CategoryCardProps) {
             {eventCount} Events
           </span>
         )}
-      </PixelBorder>
+      </div>
     </Link>
   )
 }

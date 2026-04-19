@@ -64,7 +64,7 @@ export default function AboutPage() {
         <PixelBorder className="bg-white p-8 mb-12">
           <h2 className="font-pixel text-lg text-dark-brown mb-3">Our Mission</h2>
           <p className="text-brown leading-relaxed">
-            Mission.
+            To bridge communities by providing a centralized, accessible platform to discover, share, and celebrate local events, fiestas, and everyday gatherings.
           </p>
         </PixelBorder>
 
@@ -106,10 +106,10 @@ export default function AboutPage() {
           <PixelBorder className="bg-white p-8">
             <h2 className="font-pixel text-lg text-dark-brown mb-4">Our Story</h2>
             <p className="text-brown mb-4 leading-relaxed">
-              1st paragraph.
+              As Computer Engineering students at Bulacan State University, we noticed how easy it is to miss out on vibrant local events right in our own backyards. From university intramurals and barangay fiestas to weekend pop-up markets, information was scattered across different social media pages.
             </p>
             <p className="text-brown leading-relaxed">
-              2nd paragraph.
+              We built GanapPH to solve this—creating a unified space where every local gathering gets the spotlight it deserves.
             </p>
           </PixelBorder>
 

@@ -18,8 +18,13 @@ const GOOGLE_MAPS_SCRIPT_ID = 'google-maps-places-script'
 
 export default function AddEventPage() {
   const router = useRouter()
+
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null)
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null)
+  const mapRef = useRef<HTMLDivElement | null>(null)
+  const googleMapRef = useRef<google.maps.Map | null>(null)
+  const markerRef = useRef<google.maps.Marker | null>(null)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -34,12 +39,24 @@ export default function AddEventPage() {
   const [error, setError] = useState('')
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
-  useEffect(() => {
-    const initializeAutocompleteService = () => {
-      if (!window.google || autocompleteServiceRef.current) return
+  const [showMapModal, setShowMapModal] = useState(false)
+  const [selectedLatLng, setSelectedLatLng] =
+    useState<google.maps.LatLngLiteral | null>(null)
+  const [mapAddress, setMapAddress] = useState('')
+  const [mapLoadingAddress, setMapLoadingAddress] = useState(false)
 
-      autocompleteServiceRef.current =
-        new window.google.maps.places.AutocompleteService()
+  useEffect(() => {
+    const initializeGoogleServices = () => {
+      if (!window.google) return
+
+      if (!autocompleteServiceRef.current) {
+        autocompleteServiceRef.current =
+          new window.google.maps.places.AutocompleteService()
+      }
+
+      if (!geocoderRef.current) {
+        geocoderRef.current = new window.google.maps.Geocoder()
+      }
     }
 
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -50,7 +67,7 @@ export default function AddEventPage() {
     }
 
     if (window.google?.maps?.places) {
-      initializeAutocompleteService()
+      initializeGoogleServices()
       return
     }
 
@@ -59,12 +76,9 @@ export default function AddEventPage() {
     ) as HTMLScriptElement | null
 
     if (existingScript) {
-      existingScript.addEventListener('load', initializeAutocompleteService)
+      existingScript.addEventListener('load', initializeGoogleServices)
       return () => {
-        existingScript.removeEventListener(
-          'load',
-          initializeAutocompleteService,
-        )
+        existingScript.removeEventListener('load', initializeGoogleServices)
       }
     }
 
@@ -73,13 +87,71 @@ export default function AddEventPage() {
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
     script.async = true
     script.defer = true
-    script.addEventListener('load', initializeAutocompleteService)
+    script.addEventListener('load', initializeGoogleServices)
     document.head.appendChild(script)
 
     return () => {
-      script.removeEventListener('load', initializeAutocompleteService)
+      script.removeEventListener('load', initializeGoogleServices)
     }
   }, [])
+
+  useEffect(() => {
+    if (!showMapModal || !mapRef.current || !window.google?.maps) return
+
+    const defaultCenter = selectedLatLng || { lat: 14.5995, lng: 120.9842 } // Manila fallback
+
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: defaultCenter,
+      zoom: selectedLatLng ? 16 : 13,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    })
+
+    googleMapRef.current = map
+
+    const marker = new window.google.maps.Marker({
+      position: defaultCenter,
+      map,
+      draggable: false,
+    })
+
+    markerRef.current = marker
+    setSelectedLatLng(defaultCenter)
+
+    if (!mapAddress) {
+      reverseGeocode(defaultCenter)
+    }
+
+    map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return
+
+      const clicked = {
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
+      }
+
+      marker.setPosition(clicked)
+      setSelectedLatLng(clicked)
+      reverseGeocode(clicked)
+    })
+  }, [showMapModal])
+
+  const reverseGeocode = (latLng: google.maps.LatLngLiteral) => {
+    if (!geocoderRef.current) return
+
+    setMapLoadingAddress(true)
+
+    geocoderRef.current.geocode({ location: latLng }, (results, status) => {
+      setMapLoadingAddress(false)
+
+      if (status === 'OK' && results && results.length > 0) {
+        setMapAddress(results[0].formatted_address)
+      } else {
+        setMapAddress(`${latLng.lat}, ${latLng.lng}`)
+      }
+    })
+  }
 
   const handleLocationChange = (value: string) => {
     setLocation(value)
@@ -105,6 +177,21 @@ export default function AddEventPage() {
     setSuggestions([])
   }
 
+  const openMapModal = () => {
+    setShowMapModal(true)
+    setSuggestions([])
+  }
+
+  const handleMapConfirm = () => {
+    if (mapAddress) {
+      setLocation(mapAddress)
+    } else if (selectedLatLng) {
+      setLocation(`${selectedLatLng.lat}, ${selectedLatLng.lng}`)
+    }
+
+    setShowMapModal(false)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -126,6 +213,8 @@ export default function AddEventPage() {
       setSuggestions([])
       setTime('')
       setDate('')
+      setMapAddress('')
+      setSelectedLatLng(null)
     }, 1000)
   }
 
@@ -156,7 +245,7 @@ export default function AddEventPage() {
 
             <div>
               <label className="block text-sm font-bold text-dark-brown mb-1">
-                Name
+                Event Name
               </label>
               <input
                 value={name}
@@ -200,13 +289,25 @@ export default function AddEventPage() {
               <label className="block text-sm font-bold text-dark-brown mb-1">
                 Location
               </label>
-              <input
-                value={location}
-                onChange={(e) => handleLocationChange(e.target.value)}
-                className="w-full p-3 bg-white border-2 border-brown focus:outline-none focus:border-green"
-                placeholder="Search place or enter address"
-                autoComplete="off"
-              />
+
+              <div className="relative">
+                <input
+                  value={location}
+                  onChange={(e) => handleLocationChange(e.target.value)}
+                  className="w-full p-3 pr-12 bg-white border-2 border-brown focus:outline-none focus:border-green"
+                  placeholder="Search place or enter address"
+                  autoComplete="off"
+                />
+
+                <button
+                  type="button"
+                  onClick={openMapModal}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center border-2 border-brown bg-cream hover:bg-green hover:text-cream text-dark-brown"
+                  title="Pick location from map"
+                >
+                  📍
+                </button>
+              </div>
 
               {suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border-2 border-brown shadow-lg max-h-60 overflow-y-auto">
@@ -283,6 +384,56 @@ export default function AddEventPage() {
           </Link>
         </p>
       </div>
+
+      {showMapModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-2xl">
+            <PixelBorder className="bg-parchment p-4 md:p-6">
+              <h2 className="font-pixel text-lg text-dark-brown mb-3">
+                Pick a Location
+              </h2>
+
+              <p className="text-brown text-[12px] mb-3">
+                Click anywhere on the map to drop a pin.
+              </p>
+
+              <div
+                ref={mapRef}
+                className="w-full h-[350px] border-2 border-brown bg-white"
+              />
+
+              <div className="mt-3 p-3 border-2 border-brown bg-white min-h-[70px]">
+                <p className="text-xs font-bold text-dark-brown mb-1">
+                  Selected Address
+                </p>
+                <p className="text-sm text-brown break-words">
+                  {mapLoadingAddress
+                    ? 'Loading address...'
+                    : mapAddress || 'No location selected yet.'}
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={handleMapConfirm}
+                  className="flex-1 bg-green text-cream py-3 font-pixel text-xs pixel-border-sm hover:bg-dark-green"
+                >
+                  OK
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowMapModal(false)}
+                  className="flex-1 bg-brown text-cream py-3 font-pixel text-xs pixel-border-sm hover:bg-light-brown"
+                >
+                  Cancel
+                </button>
+              </div>
+            </PixelBorder>
+          </div>
+        </div>
+      )}
 
       {showSuccessPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">

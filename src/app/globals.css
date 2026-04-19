@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Teachers:ital,wght@0,400..800;1,400..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -16,6 +17,8 @@
 
   --font-pixel: "League Spartan";
   --font-sans: "Teachers", sans-serif;
+  --font-pixel: "Nunito", sans-serif;
+  --font-sans: "Poppins", system-ui, sans-serif;
 }
 
 body {
