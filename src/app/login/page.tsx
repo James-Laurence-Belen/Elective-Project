@@ -74,7 +74,7 @@ export default function LoginPage() {
           <div className="flex mb-6 border-b-2 border-brown">
             <button
               type="button"
-              className={`flex-1 py-3 font-pixel text-[10px] transition-colors ${
+              className={`flex-1 py-3 font-pixel text-[0.9rem] transition-colors ${
                 isLogin 
                   ? 'bg-brown text-cream' 
                   : 'text-brown hover:bg-cream'
@@ -85,7 +85,7 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              className={`flex-1 py-3 font-pixel text-[10px] transition-colors ${
+              className={`flex-1 py-3 font-pixel text-[0.9rem] transition-colors ${
                 !isLogin 
                   ? 'bg-brown text-cream' 
                   : 'text-brown hover:bg-cream'
@@ -167,7 +167,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className={`w-full ${submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-dark-green'} bg-green text-cream py-4 font-pixel text-xs pixel-border-sm transition-colors mt-6`}
+              className={`w-full ${submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-dark-green'} bg-green text-cream py-4 font-pixel text-sm pixel-border-sm transition-colors mt-6`}
             >
               {submitting ? (isLogin ? 'Signing in…' : 'Creating…') : (isLogin ? 'Login' : 'Create Account')}
             </button>

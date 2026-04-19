@@ -28,24 +28,26 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">🌿</span>
-              <span className="font-pixel text-sm md:text-base text-cream text-shadow-pixel tracking-wider">
+              <span className="text-3xl">🌿</span>
+              <span className="font-pixel text-sm md:text-lg text-cream text-shadow-pixel tracking-wider">
                 GanapPH
               </span>
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.path}
-                className={`px-3 py-2 font-pixel text-[10px] uppercase transition-colors ${isActive(link.path) ? 'text-gold text-shadow-pixel border-b-2 border-gold' : 'text-cream hover:text-gold'}`}
-              >
-                {link.name}
-              </Link>
-            ))}
+          {/* Desktop Nav - Centered */}
+          <div className="flex-1 flex justify-center">
+            <div className="hidden md:flex items-center space-x-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.path}
+                  className={`px-3 py-2 font-pixel text-xs uppercase transition-colors ${isActive(link.path) ? 'text-gold text-shadow-pixel border-b-2 border-gold' : 'text-cream hover:text-gold'}`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Right side actions */}
@@ -54,14 +56,14 @@ export default function Navbar() {
               href="/events"
               className="text-cream hover:text-gold transition-colors"
             >
-              <Search size={20} />
+              <Search size={23} />
             </Link>
 
             <Link
               href="/profile"
               className="relative text-cream hover:text-gold transition-colors"
             >
-              <Heart size={20} />
+              <Heart size={23} />
               {bookmarkedIds.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-dark-brown">
                   {bookmarkedIds.length}
@@ -75,15 +77,15 @@ export default function Navbar() {
                 className="flex items-center justify-center w-9 h-9 bg-brown hover:bg-light-brown text-cream px-3 py-1.5 pixel-border-sm transition-colors"
                 aria-label="Profile"
               >
-                <User size={16} />
+                <User size={18} />
               </Link>
             ) : (
               <Link
                 href="/login"
                 className="flex items-center gap-2 bg-brown hover:bg-light-brown text-cream px-3 py-1.5 pixel-border-sm transition-colors"
               >
-                <User size={16} />
-                <span className="font-pixel text-[10px]">Login</span>
+                <User size={20} />
+                <span className="font-pixel text-[0.8rem]">Login</span>
               </Link>
             )}
           </div>
