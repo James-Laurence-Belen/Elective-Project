@@ -62,7 +62,7 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-brown mb-10 max-w-2xl mx-auto font-medium">
+          <p className="text-lg md:text-xl text-brown text-ligher-shadow-pixel mb-10 max-w-2xl mx-auto font-medium">
             Find festivals, markets, and gatherings in your community.
             Your next adventure awaits near you.
           </p>
@@ -70,24 +70,18 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/events"
-              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-s rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Explore Events
             </Link>
 
             <Link
               href="/create_event"
-              className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300"
+              className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-s rounded-xl transition-all duration-300"
             >
               Create Event
             </Link>
 
-            <Link
-              href="/calendar"
-              className="w-48 flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-              View Calendar
-            </Link>
           </div>
         </div>
       </div>
@@ -108,7 +102,7 @@ export default function HomePage() {
 
           <div className="text-center">
             <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
-              # of provinces
+              82
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
               Towns

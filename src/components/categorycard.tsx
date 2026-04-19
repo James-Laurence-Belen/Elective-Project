@@ -18,10 +18,10 @@ export function CategoryCard({ category, eventCount }: CategoryCardProps) {
         >
           {category.icon}
         </div>
-        <h3 className="font-pixel text-xs leading-relaxed mb-2 text-dark-brown">
+        <h3 className="font-pixel text-sm leading-relaxed mb-2 text-dark-brown">
           {category.name}
         </h3>
-        <p className="text-sm text-brown mb-2 flex-grow">
+        <p className="text-xs text-brown mb-2 flex-grow">
           {category.description}
         </p>
         {eventCount !== undefined && (
