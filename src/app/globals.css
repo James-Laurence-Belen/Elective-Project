@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Teachers:ital,wght@0,400..800;1,400..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
 @import "tailwindcss";
 
@@ -12,6 +15,8 @@
   --color-gold: #FFD700;
   --color-sky: #87CEEB;
 
+  --font-pixel: "League Spartan";
+  --font-sans: "Teachers", sans-serif;
   --font-pixel: "Nunito", sans-serif;
   --font-sans: "Poppins", system-ui, sans-serif;
 }
@@ -20,6 +25,7 @@ body {
   background-color: #FFF8DC;
   color: #5c3d0e;
   font-family: var(--font-sans);
+  font-weight: 600;
 }
 
 /* Pixel border utilities */
@@ -45,8 +51,14 @@ body {
 .text-shadow-pixel {
   text-shadow: 2px 2px 0px rgba(92, 61, 14, 0.5);
 }
+
+.text-ligher-shadow-pixel {
+  text-shadow: 0.5px 0.5px 0px rgba(92, 61, 14, 0.5);
+}
+
 .font-pixel {
   font-family: var(--font-pixel);
+  font-weight: 700;
 }
 
 /* Scrollbar */
