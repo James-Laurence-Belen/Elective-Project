@@ -53,13 +53,21 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/events"
-              className="bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors inline-block"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
             >
               Explore Events
             </Link>
+
+            <Link
+              href="/create_event"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
+            >
+              Create Event
+            </Link>
+
             <Link
               href="/calendar"
-              className="bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors inline-block"
+              className="w-48 flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
             >
               View Calendar
             </Link>
