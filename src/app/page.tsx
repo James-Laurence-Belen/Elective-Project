@@ -62,6 +62,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/events"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-s pixel-border-sm transition-colors"
               className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Explore Events
@@ -69,6 +70,17 @@ export default function HomePage() {
 
             <Link
               href="/create_event"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-s pixel-border-sm transition-colors"
+            >
+              Create Event
+            </Link>
+
+            <Link
+              href="/calendar"
+              className="w-48 flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-s pixel-border-sm transition-colors"
+            >
+              View Calendar
+            </Link>
               className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300"
             >
               Create Event
@@ -81,7 +93,7 @@ export default function HomePage() {
       <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-20 mb-16">
         <PixelBorder className="bg-parchment p-6 flex flex-col md:flex-row justify-around items-center gap-6">
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               {events.length}+
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
@@ -90,7 +102,7 @@ export default function HomePage() {
           </div>
           <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               # of provinces
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
@@ -99,7 +111,7 @@ export default function HomePage() {
           </div>
           <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               # of people
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
