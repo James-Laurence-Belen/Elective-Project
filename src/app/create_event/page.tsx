@@ -192,31 +192,63 @@ export default function AddEventPage() {
     setShowMapModal(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError('')
 
-    if (!name || !description || !category || !location || !time || !date) {
-      setError('Please fill in all fields.')
+  if (!name || !description || !category || !location || !time || !date) {
+    setError('Please fill in all fields.')
+    return
+  }
+
+  setSubmitting(true)
+    console.log('FRONTEND EVENT DATA:', {
+    name,
+    description,
+    category,
+    location,
+    date,
+    time,
+  })
+  try {
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        description,
+        category,
+        location,
+        date,
+        time,
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      setError(data.error || 'Failed to create event.')
       return
     }
 
-    setSubmitting(true)
-
-    setTimeout(() => {
-      setSubmitting(false)
-      setShowSuccessPopup(true)
-      setName('')
-      setDescription('')
-      setCategory('')
-      setLocation('')
-      setSuggestions([])
-      setTime('')
-      setDate('')
-      setMapAddress('')
-      setSelectedLatLng(null)
-    }, 1000)
+    setShowSuccessPopup(true)
+    setName('')
+    setDescription('')
+    setCategory('')
+    setLocation('')
+    setSuggestions([])
+    setTime('')
+    setDate('')
+    setMapAddress('')
+    setSelectedLatLng(null)
+  } catch (err) {
+    setError('Network error. Please try again.')
+  } finally {
+    setSubmitting(false)
   }
+}
 
   const handleSuccessClose = () => {
     setShowSuccessPopup(false)

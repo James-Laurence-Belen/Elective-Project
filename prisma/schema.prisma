@@ -14,4 +14,22 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  events    Event[]
+}
+
+model Event {
+  id            Int      @id @default(autoincrement())
+  organizerName String
+  name          String
+  description   String
+  category      String
+  location      String
+  date          String
+  time          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizerId   Int
+  organizer     User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 }
