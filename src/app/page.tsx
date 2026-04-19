@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, MapPin } from 'lucide-react'
 import { events } from '@/lib/events'
@@ -11,22 +11,68 @@ import { RecommendationSection } from '@/components/recommendation'
 import { PixelBorder } from '@/components/pixelborder'
 
 export default function HomePage() {
-  const featuredEvents = events
-    .filter((e) => e.isFeatured)
-    .slice(0, 3)
+  const [activeEventCount, setActiveEventCount] = useState(0)
+  const [playerCount, setPlayerCount] = useState(0)
+  const [townCount, setTownCount] = useState(0)
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
+    {},
+  )
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const eventRes = await fetch('/api/events/count')
+        const eventData = await eventRes.json()
+
+        console.log('EVENT COUNT RESPONSE:', eventData)
+
+        if (eventRes.ok) {
+          setActiveEventCount(eventData.count)
+        }
+
+        const userRes = await fetch('/api/users/count')
+        const userData = await userRes.json()
+
+        console.log('USER COUNT RESPONSE:', userData)
+
+        if (userRes.ok) {
+          setPlayerCount(userData.count)
+        }
+
+        const cityRes = await fetch('/api/events/city-count')
+        const cityData = await cityRes.json()
+
+        console.log('CITY COUNT RESPONSE:', cityData)
+
+        if (cityRes.ok) {
+          setTownCount(cityData.count)
+        }
+
+        const categoryRes = await fetch('/api/events/category-count')
+        const categoryData = await categoryRes.json()
+
+        console.log('CATEGORY COUNT RESPONSE:', categoryData)
+
+        if (categoryRes.ok) {
+          setCategoryCounts(categoryData.categoryCounts)
+        }
+      } catch (err) {
+        console.error('FAILED TO FETCH COUNTS:', err)
+      }
+    }
+
+    fetchCounts()
+  }, [])
+
+  const featuredEvents = events.filter((e) => e.isFeatured).slice(0, 3)
 
   const upcomingEvents = [...events]
-    .sort(
-      (a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    )
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 6)
 
   return (
     <div className="min-h-screen bg-cream pb-16">
-      {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-sky to-cream pt-20 pb-16 px-4 border-b-4 border-dark-brown overflow-hidden">
-        {/* Decorative Elements */}
         <div
           className="absolute top-10 left-10 text-4xl opacity-50 animate-bounce"
           style={{ animationDuration: '3s' }}
@@ -57,12 +103,9 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h1 className="font-pixel text-3xl md:text-5xl text-dark-brown mb-6 leading-tight">
             Discover Local <br />
-            <span className="text-green text-shadow-pixel">
-              Magic
-            </span>
+            <span className="text-green text-shadow-pixel">Magic</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-brown text-ligher-shadow-pixel mb-10 max-w-2xl mx-auto font-medium">
           <p className="text-lg md:text-xl text-brown mb-10 max-w-2xl mx-auto font-medium">
             Find festivals, markets, and gatherings in your community.
             Your next adventure awaits near you.
@@ -71,7 +114,6 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/events"
-              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-s rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
               className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Explore Events
@@ -79,7 +121,6 @@ export default function HomePage() {
 
             <Link
               href="/create_event"
-              className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-s rounded-xl transition-all duration-300"
               className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300"
             >
               Create Event
@@ -95,12 +136,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stats Bar */}
       <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-20 mb-16">
         <PixelBorder className="bg-parchment p-6 flex flex-col md:flex-row justify-around items-center gap-6">
           <div className="text-center">
             <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
-              {events.length}+
+              {activeEventCount}
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
               Active Events
@@ -111,10 +151,10 @@ export default function HomePage() {
 
           <div className="text-center">
             <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
-              82
+              {townCount}
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
-              Towns
+              Cities
             </div>
           </div>
 
@@ -122,17 +162,16 @@ export default function HomePage() {
 
           <div className="text-center">
             <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
-              # of people
+              {playerCount}
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
-              Players
+              People
             </div>
           </div>
         </PixelBorder>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
-        {/* Categories */}
         <section>
           <h2 className="font-pixel text-xl text-dark-brown mb-8 text-center">
             Browse by Category
@@ -140,9 +179,10 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((category) => {
-              const count = events.filter(
-                (e) => e.categoryId === category.id
-              ).length
+              const count =
+                categoryCounts[category.id] ??
+                categoryCounts[category.name] ??
+                0
 
               return (
                 <CategoryCard
@@ -155,7 +195,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Featured Events */}
         <section>
           <div className="flex justify-between items-end mb-8">
             <h2 className="font-pixel text-xl text-dark-brown">
@@ -172,18 +211,13 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-              />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         </section>
 
-        {/* Recommendations */}
         <RecommendationSection events={events} />
 
-        {/* Upcoming Events */}
         <section>
           <h2 className="font-pixel text-xl text-dark-brown mb-8">
             Upcoming Gatherings
@@ -192,9 +226,7 @@ export default function HomePage() {
           <div className="space-y-4">
             {upcomingEvents.map((event) => {
               const dateObj = new Date(event.date)
-              const category = categories.find(
-                (c) => c.id === event.categoryId
-              )
+              const category = categories.find((c) => c.id === event.categoryId)
 
               return (
                 <Link
@@ -237,18 +269,12 @@ export default function HomePage() {
 
                       <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-brown">
                         <span className="flex items-center">
-                          <Calendar
-                            size={14}
-                            className="mr-1"
-                          />
+                          <Calendar size={14} className="mr-1" />
                           {dateObj.toLocaleDateString()}
                         </span>
 
                         <span className="flex items-center">
-                          <MapPin
-                            size={14}
-                            className="mr-1"
-                          />
+                          <MapPin size={14} className="mr-1" />
                           {event.city}
                         </span>
                       </div>
