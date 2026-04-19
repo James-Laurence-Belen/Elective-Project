@@ -32,7 +32,7 @@ export default function AddEventPage() {
   const [date, setDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   useEffect(() => {
     const initializeAutocompleteService = () => {
@@ -108,7 +108,6 @@ export default function AddEventPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setMessage('')
 
     if (!name || !description || !category || !location || !time || !date) {
       setError('Please fill in all fields.')
@@ -119,7 +118,7 @@ export default function AddEventPage() {
 
     setTimeout(() => {
       setSubmitting(false)
-      setMessage('Event created successfully!')
+      setShowSuccessPopup(true)
       setName('')
       setDescription('')
       setCategory('')
@@ -128,6 +127,11 @@ export default function AddEventPage() {
       setTime('')
       setDate('')
     }, 1000)
+  }
+
+  const handleSuccessClose = () => {
+    setShowSuccessPopup(false)
+    router.push('/')
   }
 
   return (
@@ -147,12 +151,6 @@ export default function AddEventPage() {
             {error && (
               <div className="bg-red-100 border border-red-300 text-red-800 px-3 py-2 rounded font-pixel text-[11px]">
                 {error}
-              </div>
-            )}
-
-            {message && (
-              <div className="bg-green-100 border border-green-300 text-green-800 px-3 py-2 rounded font-pixel text-[11px]">
-                {message}
               </div>
             )}
 
@@ -267,7 +265,7 @@ export default function AddEventPage() {
 
               <button
                 type="button"
-                onClick={() => router.push('/events')}
+                onClick={() => router.push('/')}
                 className="flex-1 bg-brown text-cream py-3 font-pixel text-xs pixel-border-sm hover:bg-light-brown"
               >
                 Cancel
@@ -285,6 +283,28 @@ export default function AddEventPage() {
           </Link>
         </p>
       </div>
+
+      {showSuccessPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm">
+            <PixelBorder className="bg-parchment p-6 text-center">
+              <h2 className="font-pixel text-lg text-dark-brown mb-3">
+                Success!
+              </h2>
+              <p className="text-brown font-medium text-[12px] mb-6">
+                Event created successfully.
+              </p>
+              <button
+                type="button"
+                onClick={handleSuccessClose}
+                className="w-full bg-green text-cream py-3 font-pixel text-xs pixel-border-sm hover:bg-dark-green"
+              >
+                OK
+              </button>
+            </PixelBorder>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
