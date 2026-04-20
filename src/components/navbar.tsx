@@ -60,11 +60,12 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/profile"
+              href={user ? '/bookmarks' : '/login'}
               className="relative text-cream hover:text-gold transition-colors"
+              aria-label={user ? 'Bookmarks' : 'Login to view bookmarks'}
             >
               <Heart size={23} />
-              {bookmarkedIds.length > 0 && (
+              {user && bookmarkedIds.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-dark-brown">
                   {bookmarkedIds.length}
                 </span>
@@ -117,6 +118,15 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="border-t border-dark-green my-2 pt-2">
+               {user && (
+                 <Link
+                  href="/bookmarks"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 font-pixel text-[10px] uppercase text-cream hover:bg-dark-green"
+                >
+                  Bookmarks
+                </Link>
+               )}
                {user ? (
                  <Link
                   href="/profile"

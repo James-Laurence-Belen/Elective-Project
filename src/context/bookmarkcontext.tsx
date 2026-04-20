@@ -1,8 +1,14 @@
 'use client'
 
-//bookmark ng events kapag nakalogin na
-
-import React, { useEffect, useState, createContext, useContext, ReactNode } from 'react'
+import React, {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  ReactNode,
+} from 'react'
+import { useRouter } from 'next/navigation'
+import { AuthContext } from '@/context/authcontext'
 
 interface BookmarkContextType {
   bookmarkedIds: string[]
@@ -13,30 +19,72 @@ interface BookmarkContextType {
 const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined)
 
 export function BookmarkProvider({ children }: { children: ReactNode }) {
+  const { user, loading } = useContext(AuthContext)
+  const router = useRouter()
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([])
-  const [mounted, setMounted] = useState(false)
+
+  const storageKey = user ? `bookmarks:${user.id}` : null
 
   useEffect(() => {
-    setMounted(true)
-    const stored = localStorage.getItem('bookmarks')
-    if (stored) {
-      setBookmarkedIds(JSON.parse(stored))
+    if (loading || typeof window === 'undefined') return
+
+    if (!user || !storageKey) {
+      queueMicrotask(() => {
+        setBookmarkedIds([])
+      })
+      return
     }
-  }, [])
+
+    const stored = localStorage.getItem(storageKey)
+    const legacy = localStorage.getItem('bookmarks')
+    const source = stored ?? legacy
+
+    if (!source) {
+      queueMicrotask(() => {
+        setBookmarkedIds([])
+      })
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(source)
+      const nextBookmarks = Array.isArray(parsed)
+        ? parsed.filter((id): id is string => typeof id === 'string')
+        : []
+
+      queueMicrotask(() => {
+        setBookmarkedIds(nextBookmarks)
+      })
+
+      if (!stored && legacy) {
+        localStorage.setItem(storageKey, JSON.stringify(nextBookmarks))
+      }
+    } catch {
+      queueMicrotask(() => {
+        setBookmarkedIds([])
+      })
+    }
+  }, [loading, storageKey, user])
 
   const toggleBookmark = (eventId: string) => {
+    if (!user || !storageKey) {
+      router.push('/login')
+      return
+    }
+
     setBookmarkedIds((prev) => {
       const newBookmarks = prev.includes(eventId)
         ? prev.filter((id) => id !== eventId)
         : [...prev, eventId]
-      localStorage.setItem('bookmarks', JSON.stringify(newBookmarks))
+
+      localStorage.setItem(storageKey, JSON.stringify(newBookmarks))
       return newBookmarks
     })
   }
 
   const isBookmarked = (eventId: string) => bookmarkedIds.includes(eventId)
 
-  if (!mounted) {
+  if (loading || typeof window === 'undefined') {
     return (
       <BookmarkContext.Provider
         value={{
