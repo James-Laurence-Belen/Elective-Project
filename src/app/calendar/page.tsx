@@ -8,17 +8,20 @@ import { events } from '@/lib/events'
 import { categories } from '@/lib/categories'
 
 type CalendarEvent = {
-  id: number | string
+  id: string
   title: string
+  description: string
+  categoryId: string
   date: string
   time: string
   location: string
   city?: string
-  categoryId: string
 }
 
 type BookmarkedEvent = {
-  id: number
+  id: number | string
+  organizerName?: string
+  organizer?: string
   name?: string
   title?: string
   description?: string
@@ -30,15 +33,47 @@ type BookmarkedEvent = {
   city?: string
 }
 
+type AuthUser = {
+  id: number
+  email: string
+  name?: string | null
+}
+
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [bookmarkedEvents, setBookmarkedEvents] = useState<CalendarEvent[]>([])
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const loadBookmarkedEvents = () => {
+    const loadBookmarkedEvents = async () => {
       try {
-        const stored = localStorage.getItem('bookmarkedEvents')
+        const authRes = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (!authRes.ok) {
+          setCurrentUser(null)
+          setBookmarkedEvents([])
+          return
+        }
+
+        const authData = await authRes.json()
+        const user: AuthUser | null = authData.user ?? null
+
+        if (!user?.id) {
+          setCurrentUser(null)
+          setBookmarkedEvents([])
+          return
+        }
+
+        setCurrentUser(user)
+
+        const bookmarkKey = `bookmarkedEvents_user_${user.id}`
+        const stored = localStorage.getItem(bookmarkKey)
+
         if (!stored) {
           setBookmarkedEvents([])
           return
@@ -54,13 +89,14 @@ export default function CalendarPage() {
           )
 
           return {
-            id: event.id,
+            id: String(event.id),
             title: event.name || event.title || 'Untitled Event',
+            description: event.description || 'No description available.',
+            categoryId: matchedCategory?.id || categories[0]?.id || 'general',
             date: event.date || '',
             time: event.time || '',
             location: event.location || 'No location provided',
             city: event.city || '',
-            categoryId: matchedCategory?.id || categories[0]?.id || 'general',
           }
         })
 
@@ -68,6 +104,7 @@ export default function CalendarPage() {
       } catch (error) {
         console.error('Failed to load bookmarked events:', error)
         setBookmarkedEvents([])
+        setCurrentUser(null)
       }
     }
 
@@ -84,8 +121,21 @@ export default function CalendarPage() {
     }
   }, [])
 
-  const allEvents = useMemo(() => {
-    const combined = [...events, ...bookmarkedEvents]
+  const staticEvents = useMemo<CalendarEvent[]>(() => {
+    return events.map((event) => ({
+      id: String(event.id),
+      title: event.title,
+      description: event.description,
+      categoryId: event.categoryId,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      city: event.city || '',
+    }))
+  }, [])
+
+  const allEvents = useMemo<CalendarEvent[]>(() => {
+    const combined: CalendarEvent[] = [...staticEvents, ...bookmarkedEvents]
 
     const uniqueEvents = combined.filter(
       (event, index, self) =>
@@ -93,10 +143,11 @@ export default function CalendarPage() {
     )
 
     return uniqueEvents
-  }, [bookmarkedEvents])
+  }, [staticEvents, bookmarkedEvents])
 
-  const selectedEvents = allEvents.filter((e) => {
-    const eventDate = new Date(e.date)
+  const selectedEvents = allEvents.filter((event) => {
+    const eventDate = new Date(event.date)
+
     return (
       eventDate.getDate() === selectedDate.getDate() &&
       eventDate.getMonth() === selectedDate.getMonth() &&
@@ -120,10 +171,14 @@ export default function CalendarPage() {
           <p className="text-brown font-medium">
             See what is happening in the valley.
           </p>
+          {currentUser && (
+            <p className="text-xs text-brown mt-2">
+              Showing your bookmarked events and local events.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Calendar Area */}
           <div className="flex-grow lg:w-2/3">
             <CalendarView
               events={allEvents}
@@ -131,7 +186,6 @@ export default function CalendarPage() {
               onDateSelect={setSelectedDate}
             />
 
-            {/* Legend */}
             <div className="mt-6 flex flex-wrap gap-3 justify-center">
               {categories.map((cat) => (
                 <div
@@ -147,12 +201,12 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* Side Panel for Selected Date */}
           <div className="lg:w-1/3">
             <PixelBorder className="bg-white p-6 h-full min-h-[400px]">
               <h2 className="font-pixel text-sm text-dark-brown mb-1">
                 Events for
               </h2>
+
               <div className="text-lg font-bold text-green border-b-2 border-brown pb-4 mb-4">
                 {formattedSelectedDate}
               </div>
@@ -161,7 +215,7 @@ export default function CalendarPage() {
                 <div className="space-y-4">
                   {selectedEvents.map((event) => {
                     const cat = categories.find(
-                      (c) => c.id === event.categoryId,
+                      (category) => category.id === event.categoryId,
                     )
 
                     return (
@@ -176,13 +230,16 @@ export default function CalendarPage() {
                           >
                             {cat?.name || 'Event'}
                           </span>
+
                           <span className="text-xs font-bold text-brown">
                             {event.time}
                           </span>
                         </div>
+
                         <h3 className="font-bold text-dark-brown text-sm mb-1">
                           {event.title}
                         </h3>
+
                         <p className="text-xs text-brown truncate">
                           {event.location}
                           {event.city ? `, ${event.city}` : ''}

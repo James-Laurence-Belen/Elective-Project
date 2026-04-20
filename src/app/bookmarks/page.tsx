@@ -74,8 +74,9 @@ export default function BookmarksPage() {
     }
 
     try {
+      const bookmarkKey = `bookmarkedEvents_user_${user.id}`
       const saved = JSON.parse(
-        localStorage.getItem('bookmarkedEvents') || '[]',
+        localStorage.getItem(bookmarkKey) || '[]',
       ) as DbEvent[]
 
       setBookmarkedEvents(saved)
@@ -88,9 +89,13 @@ export default function BookmarksPage() {
   }, [user])
 
   const handleRemoveBookmark = (eventId: number) => {
+    if (!user) return
+
     const updated = bookmarkedEvents.filter((event) => event.id !== eventId)
     setBookmarkedEvents(updated)
-    localStorage.setItem('bookmarkedEvents', JSON.stringify(updated))
+
+    const bookmarkKey = `bookmarkedEvents_user_${user.id}`
+    localStorage.setItem(bookmarkKey, JSON.stringify(updated))
   }
 
   if (loading || (!user && isLoading)) {

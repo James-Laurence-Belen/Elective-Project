@@ -168,8 +168,15 @@ function randomItem<T>(arr: T[]): T {
 
 function randomDate(index: number) {
   const year = 2026
-  const month = ((index % 12) + 1)
+
+  
+
+  const availableMonths = [5, 6, 7, 8, 9, 10, 11, 12]
+  const month = availableMonths[index % availableMonths.length]
+
+  // Random day from 1–28 for safe valid dates
   const day = ((index * 7) % 28) + 1
+
   return `${year}-${pad(month)}-${pad(day)}`
 }
 
