@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 
+export async function GET() {
+  try {
+    const events = await prisma.event.findMany({
+      orderBy: {
+        date: 'asc',
+      },
+    })
+
+    console.log('ALL EVENTS:', events)
+
+    return NextResponse.json({ events }, { status: 200 })
+  } catch (err) {
+    console.error('GET EVENTS ERROR:', err)
+    return NextResponse.json(
+      { error: 'Failed to fetch events' },
+      { status: 500 },
+    )
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get('token')?.value
@@ -35,22 +55,28 @@ export async function POST(req: NextRequest) {
     if (!name || !description || !category || !location || !date || !time) {
       return NextResponse.json(
         { error: 'Please fill in all fields.' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
+    const eventData = {
+      organizerName: user.name || user.email,
+      name,
+      description,
+      category,
+      location,
+      date,
+      time,
+      organizerId: user.id,
+    }
+
+    console.log('DATA TO SAVE IN DB:', eventData)
+
     const event = await prisma.event.create({
-      data: {
-        organizerName: user.name || user.email,
-        name,
-        description,
-        category,
-        location,
-        date,
-        time,
-        organizerId: user.id,
-      },
+      data: eventData,
     })
+
+    console.log('SAVED EVENT:', event)
 
     return NextResponse.json({ event }, { status: 201 })
   } catch (err) {
