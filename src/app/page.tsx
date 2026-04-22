@@ -1,14 +1,149 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, MapPin } from 'lucide-react'
-import { events } from '@/lib/events'
 import { categories } from '@/lib/categories'
-import { EventCard } from '@/components/eventcard'
 import { CategoryCard } from '@/components/categorycard'
-import { RecommendationSection } from '@/components/recommendation'
 import { PixelBorder } from '@/components/pixelborder'
+
+declare global {
+  interface Window {
+    google: any
+  }
+}
+
+const GOOGLE_MAPS_SCRIPT_ID = 'google-maps-home-geocoder-script'
+
+type DbEvent = {
+  id: number
+  organizerName: string
+  name: string
+  description: string
+  category: string
+  location: string
+  date: string
+  time: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+type HomeEvent = DbEvent & {
+  city: string
+  categoryId: string
+  categoryName: string
+  distanceKm: number | null
+  image: string
+}
+
+type AuthUser = {
+  id: number
+  email: string
+  name?: string | null
+}
+
+type UserCoords = {
+  lat: number
+  lng: number
+} | null
+
+function normalizeCategory(raw: string) {
+  const value = raw.trim().toLowerCase()
+
+  const byId = categories.find((c) => c.id.toLowerCase() === value)
+  if (byId) {
+    return {
+      categoryId: byId.id,
+      categoryName: byId.name,
+      color: byId.color,
+    }
+  }
+
+  const byName = categories.find((c) => c.name.toLowerCase() === value)
+  if (byName) {
+    return {
+      categoryId: byName.id,
+      categoryName: byName.name,
+      color: byName.color,
+    }
+  }
+
+  return {
+    categoryId: raw,
+    categoryName: raw,
+    color: 'bg-brown',
+  }
+}
+
+function extractCityFromLocation(location: string) {
+  const parts = location
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (parts.length >= 2) {
+    return parts[parts.length - 2]
+  }
+
+  return parts[0] || 'Unknown'
+}
+
+function haversineDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
+  const toRad = (value: number) => (value * Math.PI) / 180
+  const R = 6371
+
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+async function loadGoogleMaps(): Promise<void> {
+  if (window.google?.maps?.Geocoder) return
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  if (!apiKey) {
+    throw new Error('Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY')
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const existingScript = document.getElementById(
+      GOOGLE_MAPS_SCRIPT_ID,
+    ) as HTMLScriptElement | null
+
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error('Failed to load Google Maps')),
+        { once: true },
+      )
+      return
+    }
+
+    const script = document.createElement('script')
+    script.id = GOOGLE_MAPS_SCRIPT_ID
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load Google Maps'))
+    document.head.appendChild(script)
+  })
+}
 
 export default function HomePage() {
   const [activeEventCount, setActiveEventCount] = useState(0)
@@ -18,13 +153,17 @@ export default function HomePage() {
     {},
   )
 
+  const [events, setEvents] = useState<DbEvent[]>([])
+  const [recommendedEvents, setRecommendedEvents] = useState<HomeEvent[]>([])
+  const [bookmarkedEvents, setBookmarkedEvents] = useState<DbEvent[]>([])
+  const [userCoords, setUserCoords] = useState<UserCoords>(null)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
+
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         const eventRes = await fetch('/api/events/count')
         const eventData = await eventRes.json()
-
-        console.log('EVENT COUNT RESPONSE:', eventData)
 
         if (eventRes.ok) {
           setActiveEventCount(eventData.count)
@@ -33,8 +172,6 @@ export default function HomePage() {
         const userRes = await fetch('/api/users/count')
         const userData = await userRes.json()
 
-        console.log('USER COUNT RESPONSE:', userData)
-
         if (userRes.ok) {
           setPlayerCount(userData.count)
         }
@@ -42,16 +179,12 @@ export default function HomePage() {
         const cityRes = await fetch('/api/events/city-count')
         const cityData = await cityRes.json()
 
-        console.log('CITY COUNT RESPONSE:', cityData)
-
         if (cityRes.ok) {
           setTownCount(cityData.count)
         }
 
         const categoryRes = await fetch('/api/events/category-count')
         const categoryData = await categoryRes.json()
-
-        console.log('CATEGORY COUNT RESPONSE:', categoryData)
 
         if (categoryRes.ok) {
           setCategoryCounts(categoryData.categoryCounts)
@@ -64,11 +197,208 @@ export default function HomePage() {
     fetchCounts()
   }, [])
 
-  const featuredEvents = events.filter((e) => e.isFeatured).slice(0, 3)
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch('/api/events', {
+          method: 'GET',
+          credentials: 'include',
+        })
 
-  const upcomingEvents = [...events]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 6)
+        const data = await res.json()
+
+        if (res.ok) {
+          setEvents(data.events || [])
+        }
+      } catch (err) {
+        console.error('FAILED TO FETCH EVENTS:', err)
+      }
+    }
+
+    fetchEvents()
+  }, [])
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (!res.ok) {
+          setCurrentUser(null)
+          setBookmarkedEvents([])
+          return
+        }
+
+        const data = await res.json()
+        const user: AuthUser | null = data.user ?? null
+        setCurrentUser(user)
+
+        if (!user?.id) {
+          setBookmarkedEvents([])
+          return
+        }
+
+        const bookmarkKey = `bookmarkedEvents_user_${user.id}`
+        const saved = JSON.parse(
+          localStorage.getItem(bookmarkKey) || '[]',
+        ) as DbEvent[]
+
+        setBookmarkedEvents(saved)
+      } catch (err) {
+        console.error('FAILED TO FETCH CURRENT USER:', err)
+        setCurrentUser(null)
+        setBookmarkedEvents([])
+      }
+    }
+
+    fetchCurrentUser()
+
+    const handleStorageChange = () => {
+      fetchCurrentUser()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+      },
+      () => {
+        setUserCoords(null)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
+    )
+  }, [])
+
+  useEffect(() => {
+    const buildRecommendedEvents = async () => {
+      if (!events.length) {
+        setRecommendedEvents([])
+        return
+      }
+
+      try {
+        await loadGoogleMaps()
+        const geocoder = new window.google.maps.Geocoder()
+
+        const geocodeLocation = async (address: string) => {
+          return new Promise<{ lat: number; lng: number } | null>((resolve) => {
+            geocoder.geocode(
+              { address },
+              (results: any[] | null, status: string) => {
+                if (
+                  status === 'OK' &&
+                  results &&
+                  results.length > 0 &&
+                  results[0].geometry?.location
+                ) {
+                  const loc = results[0].geometry.location
+                  resolve({
+                    lat: loc.lat(),
+                    lng: loc.lng(),
+                  })
+                } else {
+                  resolve(null)
+                }
+              },
+            )
+          })
+        }
+
+        const enriched = await Promise.all(
+          events.map(async (event) => {
+            const normalized = normalizeCategory(event.category)
+            const city = extractCityFromLocation(event.location)
+            const coords = await geocodeLocation(event.location)
+
+            let distanceKm: number | null = null
+            if (coords && userCoords) {
+              distanceKm = haversineDistanceKm(
+                userCoords.lat,
+                userCoords.lng,
+                coords.lat,
+                coords.lng,
+              )
+            }
+
+            return {
+              ...event,
+              city,
+              categoryId: normalized.categoryId,
+              categoryName: normalized.categoryName,
+              distanceKm,
+              image: '/placeholder-event.png',
+            }
+          }),
+        )
+
+        const sorted = [...enriched].sort((a, b) => {
+          if (userCoords) {
+            return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
+          }
+
+          const aDate = new Date(a.date).getTime()
+          const bDate = new Date(b.date).getTime()
+          return aDate - bDate
+        })
+
+        setRecommendedEvents(sorted.slice(0, 3))
+      } catch (err) {
+        console.error('FAILED TO BUILD RECOMMENDED EVENTS:', err)
+
+        const fallback = events
+          .map((event) => {
+            const normalized = normalizeCategory(event.category)
+
+            return {
+              ...event,
+              city: extractCityFromLocation(event.location),
+              categoryId: normalized.categoryId,
+              categoryName: normalized.categoryName,
+              distanceKm: null,
+              image: '/placeholder-event.png',
+            }
+          })
+          .sort(
+            (a, b) =>
+              new Date(a.date).getTime() - new Date(b.date).getTime(),
+          )
+          .slice(0, 3)
+
+        setRecommendedEvents(fallback)
+      }
+    }
+
+    buildRecommendedEvents()
+  }, [events, userCoords])
+
+  const upcomingBookmarkedEvents = useMemo(() => {
+    return [...bookmarkedEvents]
+      .sort(
+        (a, b) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
+      )
+      .slice(0, 6)
+  }, [bookmarkedEvents])
 
   return (
     <div className="min-h-screen bg-cream pb-16">
@@ -197,9 +527,16 @@ export default function HomePage() {
 
         <section>
           <div className="flex justify-between items-end mb-8">
-            <h2 className="font-pixel text-xl text-dark-brown">
-              Notice Board Highlights
-            </h2>
+            <div>
+              <h2 className="font-pixel text-xl text-dark-brown">
+                Recommended Events
+              </h2>
+              <p className="text-sm text-brown mt-2">
+                {userCoords
+                  ? 'Showing events near your current location.'
+                  : 'Allow location for nearby recommendations. Showing upcoming events for now.'}
+              </p>
+            </div>
 
             <Link
               href="/events"
@@ -209,87 +546,180 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </section>
+          {recommendedEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {recommendedEvents.map((event) => {
+                const category = categories.find(
+                  (c) => c.id === event.categoryId,
+                )
 
-        <RecommendationSection events={events} />
-
-        <section>
-          <h2 className="font-pixel text-xl text-dark-brown mb-8">
-            Upcoming Gatherings
-          </h2>
-
-          <div className="space-y-4">
-            {upcomingEvents.map((event) => {
-              const dateObj = new Date(event.date)
-              const category = categories.find((c) => c.id === event.categoryId)
-
-              return (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className="block"
-                >
-                  <PixelBorder
-                    interactive
-                    className="p-4 flex flex-col md:flex-row gap-4 items-center bg-white hover:bg-cream"
+                return (
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    className="block"
                   >
-                    <div className="flex-shrink-0 w-full md:w-32 h-32 md:h-24">
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover border-2 border-brown"
-                      />
-                    </div>
+                    <PixelBorder
+                      interactive
+                      className="bg-white hover:bg-cream p-4 h-full"
+                    >
+                      <div className="w-full h-44 mb-4">
+                        <img
+                          src={event.image}
+                          alt={event.name}
+                          className="w-full h-full object-cover border-2 border-brown"
+                        />
+                      </div>
 
-                    <div className="flex-grow min-w-0 text-center md:text-left">
-                      <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
                         <span
                           className={`text-[10px] font-pixel px-2 py-1 text-white ${
                             category?.color || 'bg-brown'
                           }`}
                         >
-                          {category?.name}
+                          {category?.name || event.categoryName}
                         </span>
 
-                        {event.price === 0 && (
+                        {event.distanceKm !== null && (
                           <span className="text-[10px] font-pixel px-2 py-1 bg-green text-white">
-                            FREE
+                            {event.distanceKm.toFixed(1)} km away
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-pixel text-sm text-dark-brown mb-2 truncate">
-                        {event.title}
+                      <h3 className="font-pixel text-sm text-dark-brown mb-2">
+                        {event.name}
                       </h3>
 
-                      <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-brown">
-                        <span className="flex items-center">
-                          <Calendar size={14} className="mr-1" />
-                          {dateObj.toLocaleDateString()}
-                        </span>
+                      <p className="text-sm text-brown mb-4 line-clamp-3">
+                        {event.description}
+                      </p>
 
-                        <span className="flex items-center">
-                          <MapPin size={14} className="mr-1" />
-                          {event.city}
-                        </span>
+                      <div className="space-y-2 text-sm text-brown">
+                        <div className="flex items-center">
+                          <Calendar size={14} className="mr-2" />
+                          {new Date(event.date).toLocaleDateString()} • {event.time}
+                        </div>
+
+                        <div className="flex items-start">
+                          <MapPin size={14} className="mr-2 mt-0.5" />
+                          <span>{event.city}</span>
+                        </div>
                       </div>
-                    </div>
+                    </PixelBorder>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="bg-white border-2 border-brown p-8 text-center">
+              <div className="text-5xl mb-4">📌</div>
+              <h3 className="font-pixel text-lg text-dark-brown mb-2">
+                No recommended events yet
+              </h3>
+              <p className="text-brown">
+                Check back after more events are added.
+              </p>
+            </div>
+          )}
+        </section>
 
-                    <div className="flex-shrink-0">
-                      <button className="bg-brown hover:bg-dark-brown text-cream px-4 py-2 font-pixel text-[10px] pixel-border-sm transition-colors w-full md:w-auto">
-                        Details
-                      </button>
-                    </div>
-                  </PixelBorder>
-                </Link>
-              )
-            })}
+        <section>
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <h2 className="font-pixel text-xl text-dark-brown">
+                Upcoming Gatherings
+              </h2>
+              <p className="text-sm text-brown mt-2">
+                {currentUser
+                  ? 'Your bookmarked events appear here.'
+                  : 'Log in and bookmark events to see them here.'}
+              </p>
+            </div>
+
+            <Link
+              href="/bookmarks"
+              className="text-green hover:text-dark-green font-bold text-sm underline decoration-2 underline-offset-4"
+            >
+              View Bookmarks
+            </Link>
           </div>
+
+          {upcomingBookmarkedEvents.length > 0 ? (
+            <div className="space-y-4">
+              {upcomingBookmarkedEvents.map((event) => {
+                const normalized = normalizeCategory(event.category)
+                const dateObj = new Date(event.date)
+
+                return (
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    className="block"
+                  >
+                    <PixelBorder
+                      interactive
+                      className="p-4 flex flex-col md:flex-row gap-4 items-center bg-white hover:bg-cream"
+                    >
+                      <div className="flex-shrink-0 w-full md:w-32 h-32 md:h-24 bg-parchment border-2 border-brown flex items-center justify-center text-3xl">
+                        📌
+                      </div>
+
+                      <div className="flex-grow min-w-0 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                          <span
+                            className={`text-[10px] font-pixel px-2 py-1 text-white ${
+                              normalized.color || 'bg-brown'
+                            }`}
+                          >
+                            {normalized.categoryName}
+                          </span>
+                        </div>
+
+                        <h3 className="font-pixel text-sm text-dark-brown mb-2 truncate">
+                          {event.name}
+                        </h3>
+
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-brown">
+                          <span className="flex items-center">
+                            <Calendar size={14} className="mr-1" />
+                            {dateObj.toLocaleDateString()}
+                          </span>
+
+                          <span className="flex items-center">
+                            <MapPin size={14} className="mr-1" />
+                            {extractCityFromLocation(event.location)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0">
+                        <button className="bg-brown hover:bg-dark-brown text-cream px-4 py-2 font-pixel text-[10px] pixel-border-sm transition-colors w-full md:w-auto">
+                          Details
+                        </button>
+                      </div>
+                    </PixelBorder>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="bg-white border-2 border-brown p-8 text-center">
+              <div className="text-5xl mb-4">♡</div>
+              <h3 className="font-pixel text-lg text-dark-brown mb-2">
+                No bookmarked events yet
+              </h3>
+              <p className="text-brown mb-5">
+                Bookmark events and they will appear here.
+              </p>
+              <Link
+                href="/events"
+                className="inline-flex items-center justify-center bg-brown text-cream px-5 py-3 font-pixel text-xs border-2 border-brown hover:bg-light-brown"
+              >
+                Explore Events
+              </Link>
+            </div>
+          )}
         </section>
       </div>
     </div>
