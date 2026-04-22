@@ -262,7 +262,15 @@ export default function HomePage() {
         const categoryData = await categoryRes.json()
 
         if (categoryRes.ok) {
-          setCategoryCounts(categoryData.categoryCounts)
+          const normalizedCounts: Record<string, number> = {}
+
+          Object.entries(categoryData.categoryCounts || {}).forEach(
+            ([key, value]) => {
+              normalizedCounts[key.trim().toLowerCase()] = Number(value)
+            },
+          )
+
+          setCategoryCounts(normalizedCounts)
         }
       } catch (err) {
         console.error('FAILED TO FETCH COUNTS:', err)
@@ -372,10 +380,7 @@ export default function HomePage() {
       }
 
       const initialEvents = [...events]
-        .sort(
-          (a, b) =>
-            new Date(a.date).getTime() - new Date(b.date).getTime(),
-        )
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 3)
 
       const initialCards: HomeEvent[] = initialEvents.map((event) => {
@@ -460,10 +465,7 @@ export default function HomePage() {
         )
 
         const nearest = [...enriched]
-          .sort(
-            (a, b) =>
-              (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity),
-          )
+          .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))
           .slice(0, 3)
 
         const nearestWithPhotos = await Promise.all(
@@ -484,9 +486,7 @@ export default function HomePage() {
 
   const upcomingBookmarkedEvents = useMemo(() => {
     return [...bookmarkedEvents]
-      .sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-      )
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 6)
   }, [bookmarkedEvents])
 
@@ -600,8 +600,8 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((category) => {
               const count =
-                categoryCounts[category.id] ??
-                categoryCounts[category.name] ??
+                categoryCounts[category.id.toLowerCase()] ??
+                categoryCounts[category.name.toLowerCase()] ??
                 0
 
               return (
