@@ -531,24 +531,24 @@ export default function HomePage() {
             Your next adventure awaits near you.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 px-4">
             <Link
               href="/events"
-              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+              className="w-full sm:w-auto flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
             >
               Explore Events
             </Link>
 
             <Link
               href="/create_event"
-              className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300"
+              className="w-full sm:w-auto flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 whitespace-nowrap"
             >
               Create Event
             </Link>
 
             <Link
               href="/calendar"
-              className="w-48 flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+              className="w-full sm:w-auto flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
             >
               View Calendar
             </Link>
