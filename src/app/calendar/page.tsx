@@ -168,9 +168,6 @@ export default function CalendarPage() {
           <h1 className="font-pixel text-2xl md:text-3xl text-dark-brown mb-2">
             Town Calendar
           </h1>
-          <p className="text-brown font-medium">
-            See what is happening in the valley.
-          </p>
           {currentUser && (
             <p className="text-xs text-brown mt-2">
               Showing your bookmarked events and local events.
