@@ -66,7 +66,7 @@ export default function BookmarksPage() {
   const [editFormData, setEditFormData] = useState<Partial<DbEvent>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -167,9 +167,9 @@ export default function BookmarksPage() {
   }
 
   const handleDelete = async (eventId: number) => {
-    if (!user) return
-    
-    setIsDeleting(true)
+    if (!user || deletingEventId !== null) return
+
+    setDeletingEventId(eventId)
     try {
       console.log('Attempting to delete event:', eventId)
       const response = await fetch(`/api/events/${eventId}`, {
@@ -205,7 +205,7 @@ export default function BookmarksPage() {
       console.error('Error deleting event:', error)
       alert(`Error deleting event: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
-      setIsDeleting(false)
+      setDeletingEventId(null)
     }
   }
 
@@ -268,7 +268,8 @@ export default function BookmarksPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {createdEvents.map((event) => {
                 const category = normalizeCategory(event.category)
-                const isDeleting = deleteConfirm === event.id
+                const isDeleteDialogOpen = deleteConfirm === event.id
+                const isDeletingThisEvent = deletingEventId === event.id
 
                 return (
                   <article
@@ -307,7 +308,7 @@ export default function BookmarksPage() {
                       </div>
                     </div>
 
-                    {deleteConfirm === event.id && (
+                    {isDeleteDialogOpen && (
                       <div className="absolute inset-0 bg-white/95 border-2 border-red-600 flex flex-col items-center justify-center p-4">
                         <p className="font-pixel text-sm text-dark-brown mb-3">
                           Delete this event?
@@ -315,13 +316,14 @@ export default function BookmarksPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleDelete(event.id)}
-                            disabled={isDeleting}
+                            disabled={isDeletingThisEvent}
                             className="bg-red-600 text-white px-3 py-1 font-pixel text-xs border-2 border-red-600 hover:bg-red-700 disabled:opacity-60"
                           >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                            {isDeletingThisEvent ? 'Deleting...' : 'Delete'}
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
+                            disabled={isDeletingThisEvent}
                             className="bg-brown text-white px-3 py-1 font-pixel text-xs border-2 border-brown hover:bg-dark-brown"
                           >
                             Cancel
