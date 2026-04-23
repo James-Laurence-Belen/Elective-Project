@@ -21,9 +21,9 @@ const team = [
   {
     id: "3",
     name: "Enriquez, Ryen Uri",
-    role: "Backend Developer",
+    role: "UI/UX Designer & Documentation",
     avatar: "./ganapics/ryen.jpg",
-    bio: "A dedicated Computer Engineering student focused on technical growth and adaptive problem-solving. Committed to mastering the stack through continuous learning and rigorous hands-on development.n",
+    bio: "Documented the system architecture, API endpoints, database schema, and deployment diagram of the project. Additionally, contributed to the UI/UX design and frontend development of the project.",
     github: "https://github.com/CPE3A-enriquez-ryenuri",
   },
   {
@@ -31,7 +31,7 @@ const team = [
     name: "Deguzman, Dionel",
     role: "Database & API Developer",
     avatar: "./ganapics/dion.jpg",
-    bio: "A dedicated Computer Engineering student aspiring to specialize in frontend development, consistently building hands-on projects and refining technical skills through continuous learning.",
+    bio: "Helped design the database schema, and develop the RESTful API endpoints for user authentication, event management, and data retrieval using Node.js, Express, and Prisma ORM.",
     github: "https://github.com/CPE3A-deguzman-dionel",
   },
   {
@@ -39,7 +39,7 @@ const team = [
     name: "Ongleo, John Lei",
     role: "Frontend Developer",
     avatar: "./ganapics/lei.jpg",
-    bio: "An aspiring Computer Engineering specialist focused on frontend development. Dedicated to technical excellence through hands-on project building and a commitment to continuous learning.",
+    bio: "Contributed to the frontend development of the project, implementing responsive design and interactive features using React and Tailwind CSS.",
     github: "https://github.com/CPE3A-ongleo-johnlei",
   },
 ];
