@@ -4,7 +4,7 @@ import { PixelBorder } from "@/components/pixelborder";
 const team = [
   {
     id: "1",
-    name: "Belen",
+    name: "Belen, James Laurence",
     role: "Backend Developer",
     avatar: "./ganapics/hames.jpg",
     bio: "A hardworking and passionate computer engineer that continuously strives to improve technical skills and problemsolving abilities through consistent learning and hands-on practice.",
@@ -12,7 +12,7 @@ const team = [
   },
   {
     id: "2",
-    name: "Cuevas",
+    name: "Cuevas, Christian John",
     role: "Frontend Developer",
     avatar: "./ganapics/cj.jpg",
     bio: "Designed and developed the UI/UX of GanapPH, focusing on user-friendly navigation, responsive layout, and modern visual design.",
@@ -20,7 +20,7 @@ const team = [
   },
   {
     id: "3",
-    name: "Enriquez",
+    name: "Enriquez, Ryen Uri",
     role: "Backend Developer",
     avatar: "./ganapics/ryen.jpg",
     bio: "A dedicated Computer Engineering student focused on technical growth and adaptive problem-solving. Committed to mastering the stack through continuous learning and rigorous hands-on development.n",
@@ -28,7 +28,7 @@ const team = [
   },
   {
     id: "4",
-    name: "Deguzman",
+    name: "Deguzman, Dionel",
     role: "Database & API Developer",
     avatar: "./ganapics/dion.jpg",
     bio: "A dedicated Computer Engineering student aspiring to specialize in frontend development, consistently building hands-on projects and refining technical skills through continuous learning.",
