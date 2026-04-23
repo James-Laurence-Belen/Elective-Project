@@ -286,7 +286,7 @@ export default function BookmarksPage() {
                       </div>
                     </div>
 
-                    {isDeleting && (
+                    {deleteConfirm === event.id && (
                       <div className="absolute inset-0 bg-white/95 border-2 border-red-600 flex flex-col items-center justify-center p-4">
                         <p className="font-pixel text-sm text-dark-brown mb-3">
                           Delete this event?
@@ -295,9 +295,9 @@ export default function BookmarksPage() {
                           <button
                             onClick={() => handleDelete(event.id)}
                             disabled={isDeleting}
-                            className="bg-red-600 text-white px-3 py-1 font-pixel text-xs border-2 border-red-600 hover:bg-red-700"
+                            className="bg-red-600 text-white px-3 py-1 font-pixel text-xs border-2 border-red-600 hover:bg-red-700 disabled:opacity-60"
                           >
-                            Delete
+                            {isDeleting ? 'Deleting...' : 'Delete'}
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
