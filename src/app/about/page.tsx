@@ -5,7 +5,7 @@ const team = [
   {
     id: "1",
     name: "Belen",
-    role: "CARRY",
+    role: "Back End",
     avatar: "./ganapics/hames.jpg",
     bio: "A hardworking and passionate computer engineer that continuously strives to improve technical skills and problemsolving abilities through consistent learning and hands-on practice.",
     github: "https://github.com/James-Laurence-Belen",
@@ -13,7 +13,7 @@ const team = [
   {
     id: "2",
     name: "Cuevas",
-    role: "JUNGLER",
+    role: "Front End",
     avatar: "./ganapics/cj.jpg",
     bio: "Designed and developed the UI/UX of GanapPH, focusing on user-friendly navigation, responsive layout, and modern visual design.",
     github: "https://github.com/CPE3A-cuevas-christian",
@@ -21,7 +21,7 @@ const team = [
   {
     id: "3",
     name: "Enriquez",
-    role: "OFF LANER",
+    role: "Front End",
     avatar: "./ganapics/ryen.jpg",
     bio: "A dedicated Computer Engineering student focused on technical growth and adaptive problem-solving. Committed to mastering the stack through continuous learning and rigorous hands-on development.n",
     github: "https://github.com/CPE3A-enriquez-ryenuri",
@@ -29,7 +29,7 @@ const team = [
   {
     id: "4",
     name: "Deguzman",
-    role: "MID LANER",
+    role: "Front End",
     avatar: "./ganapics/dion.jpg",
     bio: "A dedicated Computer Engineering student aspiring to specialize in frontend development, consistently building hands-on projects and refining technical skills through continuous learning.",
     github: "https://github.com/CPE3A-deguzman-dionel",
@@ -37,7 +37,7 @@ const team = [
   {
     id: "5",
     name: "Ongleo",
-    role: "ROAM",
+    role: "Back End",
     avatar: "./ganapics/lei.jpg",
     bio: "An aspiring Computer Engineering specialist focused on frontend development. Dedicated to technical excellence through hands-on project building and a commitment to continuous learning.",
     github: "https://github.com/CPE3A-ongleo-johnlei",
