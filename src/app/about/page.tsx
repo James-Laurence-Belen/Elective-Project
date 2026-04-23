@@ -115,7 +115,7 @@ export default function AboutPage() {
 
           <PixelBorder className="bg-white p-8">
             <h2 className="font-pixel text-lg text-gold mb-4">Tech Stack</h2>
-            <div className="grid grid-cols-3 gap-4 font-medium">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 font-medium">
               {[
                 "React",
                 "Next.js",
